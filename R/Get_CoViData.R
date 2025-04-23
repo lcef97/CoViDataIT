@@ -55,6 +55,10 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-15",
     date_to <- as.Date(newdates[2])
   }
 
+  if(date_to >= as.Date("2025-01-10")){
+    message("No data available after January 10th 2025. We apologise for the inconvenience.")
+  }
+
   dates <- seq(from = date_from, to = date_to, by = 1)
 
   starttime <- Sys.time()
