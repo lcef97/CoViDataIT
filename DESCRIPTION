@@ -1,0 +1,18 @@
+Package: CoViDataIT
+Type: Package
+Title: Download data of CoViD cases in Italy at the region level
+Version: 0.1.0
+Authors@R: c(person(given = "Leonardo", 
+             family = "Cefalo", 
+             role = c("aut", "cre"),
+             email = "leonardo.cefalo@uniba.it" ))
+Author: Leonardo Cefalo 
+Maintainer: Leonardo Cefalo <leonardo.cefalo@uniba.it>
+Description: This should be done later. 
+             devtools check complains about this being too short. lorem ipsum etcetera.
+License: GPL
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    curl 
+RoxygenNote: 7.3.2
