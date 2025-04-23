@@ -30,7 +30,8 @@ An object of class \code{tbl_df}, \code{tbl} and \code{data.frame}.
 This function downloads the region-level CoViD cases for a user-specified time period
 }
 \details{
-TBD
+Covid cases data are provided by the Italian Superior Institute of Health and hosted on GitHub.
+The current package version of this function only downloads the data between two dates.
 }
 \examples{
 

@@ -8,8 +8,8 @@ Authors@R: c(person(given = "Leonardo",
              email = "leonardo.cefalo@uniba.it" ))
 Author: Leonardo Cefalo 
 Maintainer: Leonardo Cefalo <leonardo.cefalo@uniba.it>
-Description: This should be done later. 
-             devtools check complains about this being too short. lorem ipsum etcetera.
+Description: At the time being, this package only consists in a function to retrieve CoViD cases data.
+             Further developments could be made, and development requests are encouraged at this stage.
 License: GPL
 Encoding: UTF-8
 LazyData: true

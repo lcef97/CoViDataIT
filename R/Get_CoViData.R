@@ -13,8 +13,9 @@
 #'
 #' @source  \href{https://github.com/pcm-dpc/COVID-19/tree/master/dati-regioni}{GitHub archive}
 #'
-#' @details
-#'  TBD
+#' @details Covid cases data are provided by the Italian Superior Institute of Health and hosted on GitHub.
+#' The current package version of this function only downloads the data between two dates.
+#'
 #'
 #' @return An object of class \code{tbl_df}, \code{tbl} and \code{data.frame}.
 #'
@@ -41,8 +42,20 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-15",
   date_from <- as.Date(date_from)
   date_to <- as.Date(date_to)
 
-  dates <- seq(from = date_from, to = date_to, by = 1)
+  while(!date_to > date_from){
+    message("There is a problem with dates: starting date: ",
+            as.character(date_from), " is later than end date: ",
+            as.character(date_to), ".\n",
+            "Please, select two other dates (first: starting date, second: end date) ",
+            "using this specific format: `yyyy-mm-dd;yyyy-mm-dd`.\n",
+            "Do not use quotes in the prompt.")
+    newdates <- readline(prompt = "  > ")
+    newdates <- unlist(strsplit(newdates, split = ";"))
+    date_from <- as.Date(newdates[1])
+    date_to <- as.Date(newdates[2])
+  }
 
+  dates <- seq(from = date_from, to = date_to, by = 1)
 
   starttime <- Sys.time()
   DB <- list()
