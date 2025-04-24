@@ -26,7 +26,7 @@
 #'         Variables are:
 #'         \itemize{
 #'
-#'         \item \code{Date}, character.
+#'         \item \code{Date}, Date.
 #'         \item \code{State}, character. Same for all observations.
 #'         \item \code{Region_code}, integer. The ISTAT regional code
 #'         \item \code{Region_name}, character.
@@ -50,12 +50,14 @@
 #'         \item \code{Tested_cases}, integer.
 #'         \item \code{Notes}, character
 #'         \item \code{Intensive_care_new}, integer. Daily admissions in intensive care.
+#'         \item \code{New_tests}, integer. Daily total tests
+#'         \item \code{Positive_rate}, numeric. Proportion of positive tests, given by: daily infections/daily tests
 #'}
 #' @examples
 #'
 #' \donttest{
-#'   Get_CoViData(date_from = "2022-01-01", date_to = "2022-01-08")
-#'
+#'   dd <- Get_CoViData(date_from = "2022-01-01", date_to = "2022-01-08")
+#'   head(dd)
 #' }
 #'
 #'
@@ -68,13 +70,15 @@
 Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31",
                          verbose = TRUE, autoAbort = FALSE){
 
+  starttime <- Sys.time()
+
   if(!Check_connection(autoAbort)) return(NULL)
 
   string0 <- "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni-"
   date_from <- as.Date(date_from)
   date_to <- as.Date(date_to)
 
-  while(!date_to > date_from){
+  while(!date_to >= date_from){
     message("There is a problem with dates: starting date: ",
             as.character(date_from), " is later than end date: ",
             as.character(date_to), ".\n",
@@ -93,12 +97,11 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31",
 
   dates <- seq(from = date_from, to = date_to, by = 1)
 
-  starttime <- Sys.time()
   DB <- list()
   for(t in c(1:length(dates))){
     str <- paste0(string0, gsub("-", "", as.character(dates[t])), ".csv")
     dd <- tryCatch({
-      read.csv(str)
+      utils::read.csv(str)
     }, error = function(e){
       message("No data found for ", as.character(dates[t]), "\n")
       return(NULL)
@@ -109,7 +112,7 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31",
     DB[[t]] <- dd
   }
   df <- do.call(rbind, DB)
-  df$data <- substr(df$data, 1, 10)
+  df$data <- as.Date(substr(df$data, 1, 10))
 
   names(df) <- c("Date", "State", "Region_code", "Region_name", "Latitude" ,"Longitude" ,
                  "Hospitalised_with_symptoms", "Critical_care", "Tot_hospitalised",
@@ -119,6 +122,32 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31",
                  "Notes", "Intensive_care_new", "Notes_about_tests", "Notes_about_cases",
                  "Tot_cases_molecular_tests", "Tot_cases_quick_test", "Molecular_tests",
                  "Quick_tests", "NUTS1_code", "NUTS2_code" )
+  if(length(dates)>1){
+
+    reg_names <- unique(df$Region_name)
+    New_tests_M <- matrix(NA, nrow = length(dates), ncol = 21)
+
+    for(t in c(2:length(dates))){
+      for(s in c(1:length(reg_names))){
+        New_tests_M[t, s] <- df$Tot_tests[which(df$Date == dates[t] & df$Region_name == reg_names[s]) ] -
+          df$Tot_tests[which(df$Date == dates[t-1] & df$Region_name == reg_names[s]) ]
+      }
+    }
+    New_tests <- c(t(New_tests_M))
+
+    #New_tests_V <- rep(NA, length(dates) * 21)
+
+    #for(t in c(2:length(dates))){
+     # for(s in c(1:length(reg_names))){
+      #  New_tests_V[(21*(t-1))+s] <- df$Tot_tests[which(df$Date == dates[t] & df$Region_name == reg_names[s]) ] -
+       #   df$Tot_tests[which(df$Date == dates[t-1] & df$Region_name == reg_names[s]) ]
+      #}
+    #}
+
+    df$New_tests <- New_tests
+  } else df$New_tests <- NA
+  df$positive_rate <- df$New_cases/df$New_tests
+
 
   endtime <- Sys.time()
 

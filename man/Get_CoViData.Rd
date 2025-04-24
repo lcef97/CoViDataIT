@@ -30,7 +30,7 @@ An object of class \code{data.frame} with 21 rows per day (corresponding to Ital
         Variables are:
         \itemize{
 
-        \item \code{Date}, character.
+        \item \code{Date}, Date.
         \item \code{State}, character. Same for all observations.
         \item \code{Region_code}, integer. The ISTAT regional code
         \item \code{Region_name}, character.
@@ -54,6 +54,8 @@ An object of class \code{data.frame} with 21 rows per day (corresponding to Ital
         \item \code{Tested_cases}, integer.
         \item \code{Notes}, character
         \item \code{Intensive_care_new}, integer. Daily admissions in intensive care.
+        \item \code{New_tests}, integer. Daily total tests
+        \item \code{Positive_rate}, numeric. Proportion of positive tests, given by: daily infections/daily tests
 }
 }
 \description{
@@ -67,8 +69,8 @@ Covid cases data are shared by the Italian Civil Protection and hosted on GitHub
 \examples{
 
 \donttest{
-  Get_CoViData(date_from = "2022-01-01", date_to = "2022-01-08")
-
+  dd <- Get_CoViData(date_from = "2022-01-01", date_to = "2022-01-08")
+  head(dd)
 }
 
 
