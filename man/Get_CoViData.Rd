@@ -2,36 +2,67 @@
 % Please edit documentation in R/Get_CoViData.R
 \name{Get_CoViData}
 \alias{Get_CoViData}
-\title{Download regional CoViD cases data from the Italian Superior Institute of Health}
+\title{Download regional CoViD cases data in Italy}
 \source{
 \href{https://github.com/pcm-dpc/COVID-19/tree/master/dati-regioni}{GitHub archive}
 }
 \usage{
 Get_CoViData(
   date_from = "2022-01-01",
-  date_to = "2022-01-15",
+  date_to = "2022-01-31",
   verbose = TRUE,
   autoAbort = FALSE
 )
 }
 \arguments{
-\item{date_from}{Character. The starting date. Important: necessary to use the "yyyy-mm-dd" format.}
+\item{date_from}{Character. The starting date. Important: necessary to use the "yyyy-mm-dd" format.
+"2022-01-01" by default.}
 
-\item{date_to}{Character. The ending date. Important: necessary to use the "yyyy-mm-dd" format.}
+\item{date_to}{Character. The ending date. Important: necessary to use the "yyyy-mm-dd" format.
+"2022-01-31" by default.}
 
 \item{verbose}{Logical. If \code{TRUE}, the user keeps track of the main underlying operations. \code{TRUE} by default.}
 
 \item{autoAbort}{Logical. Whether to automatically abort the operation and return NULL in case of missing internet connection or server response errors. \code{FALSE} by default.}
 }
 \value{
-An object of class \code{tbl_df}, \code{tbl} and \code{data.frame}.
+An object of class \code{data.frame} with 21 rows per day (corresponding to Italian regions) and 30 columns.
+        Variables are:
+        \itemize{
+
+        \item \code{Date}, character.
+        \item \code{State}, character. Same for all observations.
+        \item \code{Region_code}, integer. The ISTAT regional code
+        \item \code{Region_name}, character.
+        \item \code{Latitude}, numeric. Is not read by the system as a coordinate
+        \item \code{Longitude}, numeric. Same as latitude.
+        \item \code{Hospitalised_with_symptoms}, integer. The total amount of patiens hospitalised but not in intensive care.
+        \item \code{Critical_care}, integer. The total amount of patients with severe symptoms hospitalised in intensive care.
+        \item \code{Tot_hospitalised}, integer. Total amount of hospitalised patients.
+        \item \code{Home_isolation}, integer. Patients not hospitalised, which are required to undergo home isolation.
+        \item \code{Tot_positives}, integer. The total of positive patients, both hospitalised and isolated at home.
+        \item \code{Positives_variation}. integer The variation in the total amount of positives, not to be confused with the new cases.
+        \item \code{New_cases}, integer. Daily infection cases.
+        \item \code{Discharged}, integer. Daily healed patients.
+        \item \code{Deaths}, integer. Total amount of _confirmed_ deaths starting from the outbreak. Notice this is only
+                       an official count, and is likely underestimated.
+        \item \code{Diagnostic_suspect_tested}, integer. Cases tested after diagnostic suspect.
+        \item \code{Screening_tested}, integer. Cases tested after screening.
+        \item \code{Tot_cases}, integer. The whole total of confirmed infections starting from the outbreak.
+                         Notice this is only the count of confirmed infections and is obviously underestimated.
+        \item \code{Tot_tests}, integer. Total number of tests taken since the outbreak.
+        \item \code{Tested_cases}, integer.
+        \item \code{Notes}, character
+        \item \code{Intensive_care_new}, integer. Daily admissions in intensive care.
+}
 }
 \description{
-This function downloads the region-level CoViD cases for a user-specified time period
+This function downloads the region-level CoViD cases for a user-specified time period,
+elaborated by the Italian Ministry of Health and shared by the Civil Protection.
 }
 \details{
-Covid cases data are provided by the Italian Superior Institute of Health and hosted on GitHub.
-The current package version of this function only downloads the data between two dates.
+Covid cases data are shared by the Italian Civil Protection and hosted on GitHub.
+         For the time being, data sharing was interrupted on January 10th 2025.
 }
 \examples{
 
