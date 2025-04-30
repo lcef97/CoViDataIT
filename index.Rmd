@@ -1,0 +1,54 @@
+---
+title: "CoViDataIT: CoViD Open Data in Italian Regions"
+author: "Leonardo Cefalo"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  \VignetteIndexEntry{CoViDataIT: CoViD Open Data in Italian Regions}
+  \VignetteEngine{knitr::rmarkdown}
+  \VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+library(CoViDataIT)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Data source
+
+This dataset relies on the data gathered by Italian regions, validated by the Ministry of Health and eventually shared by the Civil Protection Department. Final open data are available [at this GitHub repository](https://github.com/pcm-dpc/COVID-19).
+
+
+This dataset is not meant to add any element to the precious information already published by the Civil Protection Department, it is just an `R`-based tool to download automatically the regional level data
+
+## Usage example
+
+At the time being, the usage of the retrieval function `Get_CoViData` is quite simple. The user chooses the time interval across which data are to be downloaded. 
+
+Please notice that no data are available prior to Febryary 24th 2020 neither after January 10th 2025.
+
+If, for instance, the user is interested to get data from January 1st to January 15st 2022, the function call is:
+
+```{r get data}
+dd <- Get_CoViData(date_from = "2022-01-01", date_to = "2022-01-15")
+str(dd)
+```
+
+
+
+Notes are quite obnoxious, so here we remove them
+```{r}
+dd <- dd[, -grep("Notes", names(dd))]
+```
+
+
+
+```{r data view, echo=FALSE, results='asis'}
+knitr::kable(head(dd[-c(1:21),], 10))
+```
+
+
+
