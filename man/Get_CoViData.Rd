@@ -10,6 +10,7 @@
 Get_CoViData(
   date_from = "2022-01-01",
   date_to = "2022-01-31",
+  level = "NUTS-2",
   verbose = TRUE,
   autoAbort = FALSE
 )
@@ -20,6 +21,8 @@ Get_CoViData(
 
 \item{date_to}{Character. The ending date. Important: necessary to use the "yyyy-mm-dd" format.
 "2022-01-31" by default.}
+
+\item{level}{Character. The aggregation level, either \code{NUTS-2} (regions) or \code{NUTS-3} (provinces). \code{"NUTS-2"} by default.}
 
 \item{verbose}{Logical. If \code{TRUE}, the user keeps track of the main underlying operations. \code{TRUE} by default.}
 

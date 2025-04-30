@@ -9,7 +9,7 @@
 #' @param date_to Character. The ending date. Important: necessary to use the "yyyy-mm-dd" format.
 #'                  "2022-01-31" by default.
 #'
-#'
+#' @param level Character. The aggregation level, either \code{NUTS-2} (regions) or \code{NUTS-3} (provinces). \code{"NUTS-2"} by default.
 #' @param verbose Logical. If \code{TRUE}, the user keeps track of the main underlying operations. \code{TRUE} by default.
 #' @param autoAbort Logical. Whether to automatically abort the operation and return NULL in case of missing internet connection or server response errors. \code{FALSE} by default.
 #'
@@ -67,14 +67,13 @@
 
 
 
-Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31",
+Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31", level = "NUTS-2",
                          verbose = TRUE, autoAbort = FALSE){
 
   starttime <- Sys.time()
 
   if(!Check_connection(autoAbort)) return(NULL)
 
-  string0 <- "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni-"
   date_from <- as.Date(date_from)
   date_to <- as.Date(date_to)
 
@@ -98,6 +97,14 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31",
   dates <- seq(from = date_from, to = date_to, by = 1)
 
   DB <- list()
+
+  if(! toupper (level) %in% c("NUTS-3", "PROV", "PROVINCE", "PROVINCIA", "PROVINCES")){
+    string0 <- "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni-"
+
+  } else {
+    string0 <- "https://raw.githubusercontent.com/pcm-dpc/COVID-19/refs/heads/master/dati-province/dpc-covid19-ita-province-"
+  }
+
   for(t in c(1:length(dates))){
     str <- paste0(string0, gsub("-", "", as.character(dates[t])), ".csv")
     dd <- tryCatch({
@@ -114,47 +121,46 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31",
   df <- do.call(rbind, DB)
   df$data <- as.Date(substr(df$data, 1, 10))
 
-  names(df) <- c("Date", "State", "Region_code", "Region_name", "Latitude" ,"Longitude" ,
-                 "Hospitalised_with_symptoms", "Critical_care", "Tot_hospitalised",
-                 "Home_isolation", "Tot_positives",  "Positives_variation",
-                 "New_cases", "Discharged", "Deaths", "Diagnostic_suspect_tested",
-                 "Screening_tested", "Tot_cases", "Tot_tests", "Tested_cases",
-                 "Notes", "Intensive_care_new", "Notes_about_tests", "Notes_about_cases",
-                 "Tot_cases_molecular_tests", "Tot_cases_quick_test", "Molecular_tests",
-                 "Quick_tests", "NUTS1_code", "NUTS2_code" )
-  if(length(dates)>1){
+  tabrename <- tabrename()
+  for (j in (1:ncol(df))){
+    names(df)[j] <- tabrename[which(tabrename[, 1] == names(df)[j]), 2]
+  }
 
-    reg_names <- unique(df$Region_name)
-    New_tests_M <- matrix(NA, nrow = length(dates), ncol = 21)
+  # Positive rate: only available for regions,
+  # since province data have no info on tests
+  if(!"Province_name" %in% names(df)){
+    if(length(dates)>1 ){
+      reg_names <- unique(df$Region_name)
+      New_tests_M <- matrix(NA, nrow = length(dates), ncol = 21)
 
-    for(t in c(2:length(dates))){
-      for(s in c(1:length(reg_names))){
-        New_tests_M[t, s] <- df$Tot_tests[which(df$Date == dates[t] & df$Region_name == reg_names[s]) ] -
-          df$Tot_tests[which(df$Date == dates[t-1] & df$Region_name == reg_names[s]) ]
+      for(t in c(2:length(dates))){
+        for(s in c(1:length(reg_names))){
+          New_tests_M[t, s] <- df$Tot_tests[which(df$Date == dates[t] & df$Region_name == reg_names[s]) ] -
+            df$Tot_tests[which(df$Date == dates[t-1] & df$Region_name == reg_names[s]) ]
+        }
       }
-    }
-    New_tests <- c(t(New_tests_M))
+      New_tests <- c(t(New_tests_M))
 
-    #New_tests_V <- rep(NA, length(dates) * 21)
+      #New_tests_V <- rep(NA, length(dates) * 21)
 
-    #for(t in c(2:length(dates))){
-     # for(s in c(1:length(reg_names))){
-      #  New_tests_V[(21*(t-1))+s] <- df$Tot_tests[which(df$Date == dates[t] & df$Region_name == reg_names[s]) ] -
-       #   df$Tot_tests[which(df$Date == dates[t-1] & df$Region_name == reg_names[s]) ]
+      #for(t in c(2:length(dates))){
+      # for(s in c(1:length(area_names))){
+      #  New_tests_V[(21*(t-1))+s] <- df$Tot_tests[which(df$Date == dates[t] & df$Region_name == area_names[s]) ] -
+      #   df$Tot_tests[which(df$Date == dates[t-1] & df$Region_name == area_names[s]) ]
       #}
-    #}
+      #}
 
-    df$New_tests <- New_tests
-  } else df$New_tests <- NA
-  df$positive_rate <- df$New_cases/df$New_tests
-
+      df$New_tests <- New_tests
+    } else df$New_tests <- NA
+    df$positive_rate <- df$New_cases/df$New_tests
+  }
 
   endtime <- Sys.time()
 
-
   if(verbose){
     cat(round(difftime(endtime, starttime, units = "secs"), 2),
-        "seconds needed to retrieve CoViD data from", date_from, "to", date_to, "\n")
+        "seconds needed to retrieve CoViD data from",
+        as.character(date_from), "to", as.character(date_to), "\n")
   }
   return(df)
 
