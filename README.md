@@ -10,3 +10,5 @@ This poses a doubt on whether to spend time and energy to improve or maintain th
 does it hold a point, or is it a sterile exercise in R programming?
 
 [Newspaper](https://lab24.ilsole24ore.com/coronavirus/) talks about a "Transmission problem of the Ministry".
+
+A primordial vignette draft is [here](https://lcef97.github.io/CoViDataIT/) (ongoing)
