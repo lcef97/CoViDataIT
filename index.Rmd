@@ -30,11 +30,10 @@ At the time being, the usage of the retrieval function `Get_CoViData` is quite s
 
 Please notice that no data are available prior to Febryary 24th 2020 neither after January 10th 2025.
 
-If, for instance, the user is interested to get data from January 1st to January 15st 2022, the function call is:
+If, for instance, the user is interested to get data from January 1st to January 31st 2022, the function call is the following; verbose output is suppressed.
 
 ```{r get data}
-dd <- Get_CoViData(date_from = "2022-01-01", date_to = "2022-01-15")
-str(dd)
+dd <- Get_CoViData(date_from = "2022-01-01", date_to = "2022-01-31", verbose = F)
 ```
 
 
@@ -47,8 +46,19 @@ dd <- dd[, -grep("Notes", names(dd))]
 
 
 ```{r data view, echo=FALSE, results='asis'}
-knitr::kable(head(dd[-c(1:21),], 10))
+DT::datatable(dd[-c(1:21),], options = list(pageLength = 10, scrollX = TRUE))  
 ```
 
+
+Now, for instance, we can show the positive rate in Southern Italy.
+
+```{r example plot, fig.width=6}
+
+dd_south <- dd[which(dd$Region_code > 12),]
+ggplot2::ggplot(dd_south[-c(1:21), ]) +
+  ggplot2::aes(x = .data$Date, y = .data$positive_rate) + 
+  ggplot2::geom_line(ggplot2::aes(color = .data$Region_name))  
+
+```
 
 
