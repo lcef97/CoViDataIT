@@ -92,6 +92,7 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31", level
 
   if(date_to >= as.Date("2025-01-10")){
     message("No data available after January 10th 2025. We apologise for the inconvenience.")
+    date_to <- as.Date("2025-01-09")
   }
 
   dates <- seq(from = date_from, to = date_to, by = 1)
@@ -118,6 +119,13 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31", level
     }
     DB[[t]] <- dd
   }
+
+  # It may happen that daily reports do NOT have
+  # the same number of variables
+  if (any( diff(unlist(lapply(DB, function(x)ncol(x)))) != 0) ){
+    DB <- ls_intersect(DB)
+  }
+
   df <- do.call(rbind, DB)
   df$data <- as.Date(substr(df$data, 1, 10))
 
