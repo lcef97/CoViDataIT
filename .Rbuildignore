@@ -2,3 +2,9 @@
 ^\.Rproj\.user$
 ignore_data
 ^ignore_data/
+^\.github$
+^\.Rhistory$
+^\.gitignore$
+^R/\.Rhistory$
+^\.\.Rcheck$
+^\.git$

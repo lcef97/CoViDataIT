@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
 ```
 
 ## Data source
@@ -60,5 +61,126 @@ ggplot2::ggplot(dd_south[-c(1:21), ]) +
   ggplot2::geom_line(ggplot2::aes(color = .data$Region_name))  
 
 ```
+
+
+
+## Unorthodox application: a spatial analysis over yearly totals
+
+
+```{r req magrittr, echo = F}
+library(magrittr)
+```
+
+Here we propose another usage example, which however wastes much of the 
+available information.
+Specifically, we provide a spatial model for the yearly total infections for 
+the years allowing for full data record, i.e. 2021-2024. This simply requires the data
+at the end of each year. For 2020/12/31, for instance, we do as follows. Specifically,
+we filter out the infections recorded in different provinces and the ones
+for which the province is not available. Please notice this did not happen for regions.
+I guess it is because the health infrastructure is managed on the regional basis, 
+so discrepancies in between-province data records are resolved when aggregating for
+provinces. I get this may sound nonsense, as sai it is just a very rough guess.
+
+```{r eoy 2020 data, warning = F, message =F}
+cases.EoY20 <- Get_CoViData(date_from = "2020-12-31", date_to = "2020-12-31",
+                            level = "NUTS-3") %>%
+  dplyr::filter(nchar(.data$Province_abbreviation)>0) %>%
+  dplyr::rename(Tot_cases_EoY20 = .data$Tot_cases) %>%
+  dplyr::select(-c("Latitude", "Longitude", "Notes"))
+```
+
+
+We do the same for 2021-24 (not shown)
+
+
+```{r remainder input, echo = F, message = F, warning = F}
+cases.EoY21 <- Get_CoViData(date_from = "2021-12-31", date_to = "2021-12-31",
+                            level = "NUTS-3")%>%
+  dplyr::filter(nchar(.data$Province_abbreviation)>0)%>%
+  dplyr::rename(Tot_cases_EoY21 = .data$Tot_cases)%>%
+  dplyr::select(-c("Latitude", "Longitude", "Notes")) %>%
+  dplyr::select(-c((ncol(.)-2):ncol(.)))
+
+cases.EoY22 <- Get_CoViData(date_from = "2022-12-31", date_to = "2022-12-31",
+                            level = "NUTS-3")%>%
+  dplyr::filter(nchar(.data$Province_abbreviation)>0)%>%
+  dplyr::rename(Tot_cases_EoY22 = .data$Tot_cases)%>%
+  dplyr::select(-c("Latitude", "Longitude", "Notes"))%>%
+  dplyr::select(-c((ncol(.)-2):ncol(.)))
+
+cases.EoY23 <- Get_CoViData(date_from = "2023-12-31", date_to = "2023-12-31",
+                            level = "NUTS-3")%>%
+  dplyr::filter(nchar(.data$Province_abbreviation)>0)%>%
+  dplyr::rename(Tot_cases_EoY23 = .data$Tot_cases)%>%
+  dplyr::select(-c("Latitude", "Longitude", "Notes"))%>%
+  dplyr::select(-c((ncol(.)-2):ncol(.)))
+
+cases.EoY24 <- Get_CoViData(date_from = "2024-12-31", date_to = "2024-12-31",
+                            level = "NUTS-3")%>%
+  dplyr::filter(nchar(.data$Province_abbreviation)>0)%>%
+  dplyr::rename(Tot_cases_EoY24 = .data$Tot_cases)%>%
+  dplyr::select(-c("Latitude", "Longitude", "Notes"))%>%
+  dplyr::select(-c((ncol(.)-2):ncol(.)))
+
+id.cols <- c("State", "Region_code", "Region_name","Province_code","Province_name","Province_abbreviation")
+
+covid.cases <- cases.EoY20[, -1] %>%
+  dplyr::left_join(cases.EoY21[, -1],  by =id.cols)%>%
+  dplyr::left_join(cases.EoY22[, -1],  by =id.cols)%>%
+  dplyr::left_join(cases.EoY23[, -1],  by =id.cols)%>%
+  dplyr::left_join(cases.EoY24[, -1],  by =id.cols) %>%
+  dplyr::mutate(Year_2021 = .data$Tot_cases_EoY21 - .data$Tot_cases_EoY20) %>%
+  dplyr::mutate(Year_2022 = .data$Tot_cases_EoY22 - .data$Tot_cases_EoY21) %>%
+  dplyr::mutate(Year_2023 = .data$Tot_cases_EoY23 - .data$Tot_cases_EoY22) %>%
+  dplyr::mutate(Year_2024 = .data$Tot_cases_EoY24 - .data$Tot_cases_EoY23)
+load(url("https://github.com/lcef97/CoViDataIT/raw/refs/heads/main/ignore_data/POP_ITA_prov_from21to24.RData"))
+
+
+```
+
+Then we add the population at January 1st, retrieved from the ISTAT website, 
+and a shapefile for province boundaries. Luckily, no change of boundaries 
+seems to have happened between 2021/01/01 and 2024/12/31.
+The shapefile is scraped with the [SchoolDataIT package](https://CRAN.R-project.org/package=SchoolDataIT).
+
+```{r shapefile, message=FALSE, warning = FALSE}
+if(!rlang::is_installed("SchoolDataIT")) {
+  install.packages("SchoolDataIT")
+}
+Prov21_shp <- SchoolDataIT::Get_Shapefile(2021, level ="NUTS-3")
+
+```
+
+```{r spat DB, echo = FALSE, warning= FALSE, message = FALSE}
+dd <- Prov21_shp %>% dplyr::transmute(Province_code = .data$COD_PROV,
+                                      Surface = .data$SHAPE_AREA/1e+6) %>%
+  dplyr::left_join(covid.cases, by = "Province_code") %>%
+  dplyr::select(-.data$State, -.data$Region_code, .data$Region_name, -.data$Province_name,
+                -.data$Tot_cases_EoY20, -.data$Tot_cases_EoY21, -.data$Tot_cases_EoY22,
+                -.data$Tot_cases_EoY23, -.data$Tot_cases_EoY24) %>%
+  tidyr::pivot_longer(cols = c("Year_2021", "Year_2022", "Year_2023", "Year_2024"),
+                      names_to = "Year", names_prefix = "Year_",
+                      values_to = "Cases") %>%
+  dplyr::left_join(POP_ITA_prov_from21to24, by=c("Province_code", "Year"))  %>%
+  dplyr::mutate(Pop_density = .data$Surface/.data$Population) %>%
+  dplyr::mutate(Incidence=.data$Cases/.data$Population)
+
+```
+
+We show the spatial pattern of 2021 data
+```{r mapview, echo = F, fig.height = 3.6}
+dd21 <- dd %>% dplyr::filter(.data$Year == "2021")
+mapview::mapview(dd21, zcol = "Incidence")
+```
+
+ 
+
+
+
+
+
+
+
 
 
