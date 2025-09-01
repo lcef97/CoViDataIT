@@ -129,9 +129,12 @@ Get_CoViData <- function(date_from = "2022-01-01", date_to = "2022-01-31", level
   df <- do.call(rbind, DB)
   df$data <- as.Date(substr(df$data, 1, 10))
 
-  tabrename <- tabrename()
+  tab.rename <- tabrename()
   for (j in (1:ncol(df))){
-    names(df)[j] <- tabrename[which(tabrename[, 1] == names(df)[j]), 2]
+    names(df)[j] <- tab.rename[which(tab.rename[, 1] == names(df)[j]), 2]
+  }
+  if("Province_abbreviation" %in% names(df)){
+    df$Province_abbreviation[which(as.numeric(df$Province_code)==63)] <- "NA"
   }
 
   # Positive rate: only available for regions,
